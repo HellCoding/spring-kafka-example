@@ -261,7 +261,7 @@ GET /api/payments/order/{orderId}
 ### 전체 기동
 
 ```bash
-cd ~/dev/spring-kafka-example
+cd spring-kafka-example
 
 # 빌드 및 기동 (첫 실행 시 빌드에 수 분 소요)
 docker compose up -d --build
@@ -277,6 +277,8 @@ docker compose ps
 4. API Gateway → (Eureka에서 서비스 조회)
 
 > Eureka 등록에 약 30초 정도 소요될 수 있다. Gateway를 통한 요청이 503을 반환하면 잠시 기다린 후 재시도한다.
+
+> ⚠️ **주의**: `docker-compose.yml`에 포함된 PostgreSQL 자격 증명(`postgres/postgres`)은 **로컬 개발 전용**이다. 프로덕션 환경에서는 반드시 안전한 비밀번호를 사용하고, 환경 변수나 시크릿 관리 도구를 통해 주입해야 한다.
 
 ### 테스트 시나리오
 

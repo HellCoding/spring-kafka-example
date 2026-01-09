@@ -2,6 +2,9 @@ package com.example.order.dto;
 
 import java.math.BigDecimal;
 
+/**
+ * 주문 생성 요청 DTO.
+ */
 public class OrderRequest {
     private String productName;
     private Integer quantity;

@@ -4,6 +4,7 @@ import com.example.payment.entity.Payment;
 import com.example.payment.entity.PaymentStatus;
 import com.example.payment.event.OrderCreatedEvent;
 import com.example.payment.event.PaymentEvent;
+import com.example.payment.exception.PaymentNotFoundException;
 import com.example.payment.repository.PaymentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,8 +13,11 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * 주문 이벤트를 수신하여 결제를 처리하고 결과를 Kafka로 발행하는 서비스.
+ */
 @Service
 public class PaymentService {
 
@@ -22,7 +26,6 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final Random random = new Random();
 
     public PaymentService(PaymentRepository paymentRepository, KafkaTemplate<String, Object> kafkaTemplate) {
         this.paymentRepository = paymentRepository;
@@ -35,7 +38,7 @@ public class PaymentService {
         log.info("Received OrderCreatedEvent: orderId={}, amount={}", event.getOrderId(), event.getTotalAmount());
 
         // 결제 처리 시뮬레이션 (70% 성공, 30% 실패)
-        boolean paymentSuccess = random.nextInt(100) < 70;
+        boolean paymentSuccess = ThreadLocalRandom.current().nextInt(100) < 70;
 
         Payment payment = new Payment();
         payment.setOrderId(event.getOrderId());
@@ -59,6 +62,6 @@ public class PaymentService {
 
     public Payment getPaymentByOrderId(Long orderId) {
         return paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new RuntimeException("Payment not found for order: " + orderId));
+                .orElseThrow(() -> new PaymentNotFoundException(orderId));
     }
 }

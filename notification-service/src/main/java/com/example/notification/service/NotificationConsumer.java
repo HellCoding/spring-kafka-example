@@ -8,6 +8,9 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+/**
+ * 결제 이벤트를 수신하여 알림을 발송하는 Kafka Consumer.
+ */
 @Service
 public class NotificationConsumer {
 

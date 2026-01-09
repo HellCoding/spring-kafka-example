@@ -7,6 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+/**
+ * 결제 결과 이벤트를 수신하여 주문 상태를 업데이트하는 Kafka Consumer.
+ */
 @Component
 public class PaymentEventConsumer {
 

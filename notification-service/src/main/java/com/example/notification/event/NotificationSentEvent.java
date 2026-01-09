@@ -1,5 +1,8 @@
 package com.example.notification.event;
 
+/**
+ * 알림 발송 기록을 Kafka로 발행하기 위한 이벤트.
+ */
 public class NotificationSentEvent {
     private Long orderId;
     private String message;

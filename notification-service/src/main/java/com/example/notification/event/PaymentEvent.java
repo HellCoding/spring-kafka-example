@@ -2,6 +2,9 @@ package com.example.notification.event;
 
 import java.math.BigDecimal;
 
+/**
+ * 결제 결과를 수신하기 위한 Kafka 이벤트.
+ */
 public class PaymentEvent {
     private Long paymentId;
     private Long orderId;

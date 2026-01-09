@@ -2,6 +2,9 @@ package com.example.payment.event;
 
 import java.math.BigDecimal;
 
+/**
+ * 결제 결과를 Kafka로 발행하기 위한 이벤트.
+ */
 public class PaymentEvent {
     private Long paymentId;
     private Long orderId;

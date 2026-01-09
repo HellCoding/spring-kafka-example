@@ -4,6 +4,7 @@ import com.example.order.dto.OrderRequest;
 import com.example.order.entity.Order;
 import com.example.order.entity.OrderStatus;
 import com.example.order.event.OrderCreatedEvent;
+import com.example.order.exception.OrderNotFoundException;
 import com.example.order.repository.OrderRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * 주문 생성, 조회 및 Kafka 이벤트 발행을 담당하는 서비스.
+ */
 @Service
 public class OrderService {
 
@@ -53,7 +57,7 @@ public class OrderService {
 
     public Order getOrder(Long id) {
         return orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found: " + id));
+                .orElseThrow(() -> new OrderNotFoundException(id));
     }
 
     public List<Order> getAllOrders() {

@@ -2,6 +2,9 @@ package com.example.order.event;
 
 import java.math.BigDecimal;
 
+/**
+ * 주문 생성 시 Kafka로 발행되는 이벤트.
+ */
 public class OrderCreatedEvent {
     private Long orderId;
     private String productName;

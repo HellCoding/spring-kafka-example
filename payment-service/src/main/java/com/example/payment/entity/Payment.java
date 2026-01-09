@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * 결제 정보를 저장하는 JPA 엔티티.
+ */
 @Entity
 @Table(name = "payments")
 public class Payment {
