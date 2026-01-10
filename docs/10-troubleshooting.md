@@ -226,4 +226,4 @@ docker compose up -d --build    # 재빌드 + 재시작
 
 ---
 
-[← 이전: 09. Docker 환경 구성](09-docker-setup.md) | [목차로 돌아가기 →](README.md)
+[← 이전: 09. Docker 환경 구성](09-docker-setup.md) | [다음: 11. 테스트 시나리오 가이드 →](11-testing.md)

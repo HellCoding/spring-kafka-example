@@ -21,13 +21,14 @@
 | 08 | [Kafka 이벤트 설계](08-kafka-event-flow.md) | 토픽 설계, 이벤트 클래스, Type Mapping, Consumer Group 전략 |
 | 09 | [Docker 환경 구성](09-docker-setup.md) | docker-compose.yml 분석, 멀티스테이지 빌드, 기동 순서 |
 | 10 | [트러블슈팅](10-troubleshooting.md) | 개발 중 만난 문제와 해결 과정 |
+| 11 | [테스트 시나리오 가이드](11-testing.md) | Swagger UI, Kafka UI, curl을 활용한 단계별 테스트 방법 |
 
 ---
 
 ## 읽는 순서 추천
 
-**처음 접하는 경우**: 00 → 02 → 03 → 01 → 04~07 → 08 → 09
+**처음 접하는 경우**: 00 → 02 → 03 → 01 → 04~07 → 08 → 09 → 11
 
-**Spring Cloud는 알고, Kafka를 배우려는 경우**: 00 → 03 → 08 → 05~07
+**Spring Cloud는 알고, Kafka를 배우려는 경우**: 00 → 03 → 08 → 05~07 → 11
 
 **바로 실행해보고 싶은 경우**: [README.md](../README.md)의 사용법 섹션 참고

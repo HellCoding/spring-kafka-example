@@ -20,6 +20,7 @@ dependencies {\n\
     implementation "org.springframework.boot:spring-boot-starter-actuator"\n\
     implementation "org.springframework.cloud:spring-cloud-starter-netflix-eureka-client"\n\
     implementation "org.springframework.kafka:spring-kafka"\n\
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0"\n\
     runtimeOnly "org.postgresql:postgresql"\n\
 }\n' > build.gradle && \
     gradle bootJar --no-daemon -x test

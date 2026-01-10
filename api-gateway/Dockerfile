@@ -18,6 +18,7 @@ dependencies {\n\
     implementation "org.springframework.cloud:spring-cloud-starter-gateway"\n\
     implementation "org.springframework.cloud:spring-cloud-starter-netflix-eureka-client"\n\
     implementation "org.springframework.boot:spring-boot-starter-actuator"\n\
+    implementation "org.springdoc:springdoc-openapi-starter-webflux-ui:2.5.0"\n\
 }\n' > build.gradle && \
     gradle bootJar --no-daemon -x test
 
