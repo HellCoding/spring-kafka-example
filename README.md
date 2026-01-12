@@ -1,5 +1,14 @@
 # Spring Cloud + Kafka 예제 프로젝트
 
+> **"결제 서비스가 죽으면 주문도 못 받는다고?"** — 동기 호출의 한계를 느끼고, 비동기 이벤트 기반 아키텍처로 전환한 과정을 담은 프로젝트.
+
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.5-6DB33F?logo=springboot&logoColor=white)
+![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2023.0.1-6DB33F?logo=spring&logoColor=white)
+![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-3.7-231F20?logo=apachekafka&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![Java](https://img.shields.io/badge/Java-17-ED8B00?logo=openjdk&logoColor=white)
+
 Spring Cloud 마이크로서비스 환경에서 Apache Kafka를 활용한 이벤트 기반 아키텍처(EDA) 학습용 프로젝트.
 **온라인 주문 시스템**을 도메인으로, 주문 → 결제 → 알림의 비동기 이벤트 흐름을 구현한다.
 
@@ -7,42 +16,84 @@ Spring Cloud 마이크로서비스 환경에서 Apache Kafka를 활용한 이벤
 
 ---
 
-## 아키텍처
+## 왜 이 프로젝트를 만들었는가
+
+마이크로서비스에서 서비스 간 **동기 HTTP 호출**은 간단하지만 치명적인 문제가 있다:
 
 ```
-                          ┌─────────────────────┐
-                          │   API Gateway :8080  │
-                          │  (Spring Cloud GW)   │
-                          └──────────┬──────────┘
-                                     │ HTTP 라우팅
-                    ┌────────────────┼────────────────┐
-                    ▼                ▼                ▼
-           ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-           │ Order Service│ │Payment Svc   │ │Notification  │
-           │    :8081     │ │   :8082      │ │ Service :8083│
-           └──────┬───────┘ └──────┬───────┘ └──────┬───────┘
-                  │                │                │
-                  │    ┌───────────┴────────────┐   │
-                  └───▶│     Apache Kafka       │◀──┘
-                       │   (KRaft 모드) :9092   │
-                       └───────────┬────────────┘
-                                   │
-                  ┌────────────────┼────────────────┐
-                  ▼                                 ▼
-           ┌──────────────┐                  ┌──────────────┐
-           │ PostgreSQL   │                  │  Kafka UI    │
-           │    :5432     │                  │    :9090     │
-           └──────────────┘                  └──────────────┘
-                  │
-          ┌───────┴───────┐
-          │  order_db     │
-          │  payment_db   │
-          └───────────────┘
+[ 동기 호출의 문제 ]
 
-        ┌──────────────────────────┐
-        │  Eureka Server :8761     │
-        │  (서비스 디스커버리)       │
-        └──────────────────────────┘
+Client → Order Service →→→ Payment Service (장애!)
+                        ↑
+                        └── Order Service도 함께 실패
+                            = 연쇄 장애 (Cascading Failure)
+```
+
+- Payment Service가 죽으면 **Order Service도 응답 불가** (강한 결합)
+- 결제가 느리면 **주문 API 전체가 느려짐** (시간적 결합)
+- 알림 서비스 추가 시 **Order → Payment → Notification 순차 호출** 필요 (확장 어려움)
+
+이 프로젝트는 **Kafka 기반 비동기 이벤트**로 이 문제를 해결하는 과정을 담았다:
+
+```
+[ 비동기 이벤트로 전환 ]
+
+Client → Order Service → Kafka ──▶ Payment Service (독립 처리)
+                                ──▶ Notification Service (독립 처리)
+
+Payment Service가 죽어도?
+→ Order Service는 정상 동작
+→ Kafka가 메시지를 보관
+→ Payment Service 복구 시 밀린 주문 자동 처리
+```
+
+**직접 경험한 문제 → 해결 과정 → 동작하는 코드**를 이 프로젝트에서 확인할 수 있다.
+
+---
+
+## 아키텍처
+
+```mermaid
+graph TB
+    Client([Client]) -->|HTTP| GW[API Gateway<br/>:8080]
+
+    GW -->|라우팅| OS[Order Service<br/>:8081]
+    GW -->|라우팅| PS[Payment Service<br/>:8082]
+
+    OS -->|OrderCreatedEvent| K{{Apache Kafka<br/>KRaft :9092}}
+    K -->|OrderCreatedEvent| PS
+    PS -->|PaymentEvent| K
+    K -->|PaymentEvent| OS
+    K -->|PaymentEvent| NS[Notification Service<br/>:8083]
+    NS -->|NotificationSentEvent| K
+
+    OS --- DB1[(order_db)]
+    PS --- DB2[(payment_db)]
+
+    subgraph Service Discovery
+        EU[Eureka Server<br/>:8761]
+    end
+
+    OS -.->|등록| EU
+    PS -.->|등록| EU
+    NS -.->|등록| EU
+    GW -.->|조회| EU
+
+    KUI[Kafka UI<br/>:9090] -.->|모니터링| K
+
+    subgraph PostgreSQL :5432
+        DB1
+        DB2
+    end
+
+    style K fill:#231F20,color:#fff
+    style GW fill:#6DB33F,color:#fff
+    style OS fill:#6DB33F,color:#fff
+    style PS fill:#6DB33F,color:#fff
+    style NS fill:#6DB33F,color:#fff
+    style EU fill:#6DB33F,color:#fff
+    style DB1 fill:#4169E1,color:#fff
+    style DB2 fill:#4169E1,color:#fff
 ```
 
 ---
@@ -89,37 +140,36 @@ Spring Cloud 마이크로서비스 환경에서 Apache Kafka를 활용한 이벤
 
 ### 이벤트 플로우 상세
 
-```
-[1] 클라이언트 → POST /api/orders (주문 생성 요청)
-    │
-    ▼
-[2] Order Service
-    ├── DB 저장: orders 테이블에 status=PENDING으로 INSERT
-    └── Kafka 발행: order-events 토픽에 OrderCreatedEvent 전송
-        {orderId, productName, quantity, totalAmount}
-    │
-    ▼
-[3] Payment Service (order-events 구독, group: payment-service-group)
-    ├── OrderCreatedEvent 수신
-    ├── 결제 처리 시뮬레이션 (Random: 70% 성공 / 30% 실패)
-    ├── DB 저장: payments 테이블에 결제 결과 INSERT
-    └── Kafka 발행: payment-events 토픽에 PaymentEvent 전송
-        {paymentId, orderId, amount, status: "SUCCESS" | "FAILED"}
-    │
-    ├──────────────────────┐
-    ▼                      ▼
-[4a] Order Service         [4b] Notification Service
-(payment-events 구독,      (payment-events 구독,
- group: order-service-     group: notification-service-
- group)                    group)
-    │                          │
-    ├── PaymentEvent 수신      ├── PaymentEvent 수신
-    └── 주문 상태 업데이트       └── 알림 메시지 로그 출력
-        SUCCESS → CONFIRMED        "[SUCCESS] 주문 #N 결제 완료"
-        FAILED  → CANCELLED        "[FAILED] 주문 #N 결제 실패"
-                                   │
-                                   └── Kafka 발행: notification-events
-                                       {orderId, message, channel}
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant OS as Order Service
+    participant K as Kafka
+    participant PS as Payment Service
+    participant NS as Notification Service
+
+    C->>OS: POST /api/orders
+    OS->>OS: DB 저장 (status=PENDING)
+    OS-->>C: 201 Created {status: PENDING}
+
+    OS->>K: OrderCreatedEvent<br/>[order-events]
+    K->>PS: OrderCreatedEvent
+
+    PS->>PS: 결제 시뮬레이션<br/>(70% 성공 / 30% 실패)
+    PS->>PS: DB 저장 (결제 결과)
+    PS->>K: PaymentEvent<br/>[payment-events]
+
+    par 동시 수신
+        K->>OS: PaymentEvent
+        OS->>OS: 주문 상태 업데이트<br/>SUCCESS→CONFIRMED<br/>FAILED→CANCELLED
+    and
+        K->>NS: PaymentEvent
+        NS->>NS: 알림 로그 출력
+        NS->>K: NotificationSentEvent<br/>[notification-events]
+    end
+
+    C->>OS: GET /api/orders/{id}
+    OS-->>C: {status: CONFIRMED}
 ```
 
 ### Consumer Group 설계
@@ -434,26 +484,15 @@ spring-kafka-example/
 
 ---
 
-## 학습 포인트
+## 이 프로젝트에서 배울 수 있는 것
 
-### 1. Kafka Producer/Consumer 패턴
-- `KafkaTemplate.send(topic, key, event)` — 이벤트 발행
-- `@KafkaListener(topics, groupId)` — 이벤트 수신
-- JSON 직렬화/역직렬화 (`JsonSerializer` / `JsonDeserializer`)
+| 주제 | 해결한 문제 | 적용 기술 |
+|------|-------------|-----------|
+| **비동기 이벤트 통신** | 동기 호출의 연쇄 장애, 시간적 결합 | Kafka Producer/Consumer, `KafkaTemplate`, `@KafkaListener` |
+| **Consumer Group** | 같은 이벤트를 여러 서비스가 독립 소비 | `payment-events`를 order-service, notification-service가 각각 구독 |
+| **크로스 서비스 타입 매핑** | 서비스마다 다른 패키지의 이벤트 클래스 역직렬화 | `spring.json.type.mapping`으로 논리적 alias 사용 |
+| **서비스 디스커버리** | 서비스 위치(IP/포트) 하드코딩 제거 | Eureka 자동 등록 + Gateway `lb://` 라우팅 |
+| **장애 복구** | 서비스 다운 시 메시지 유실 방지 | Kafka 메시지 보존 → 복구 후 자동 소비 |
+| **컨테이너 오케스트레이션** | 8개 컨테이너 기동 순서 관리 | `depends_on` + `healthcheck` + 멀티스테이지 빌드 |
 
-### 2. Consumer Group
-- 같은 토픽(`payment-events`)을 서로 다른 그룹(`order-service-group`, `notification-service-group`)으로 구독
-- 각 그룹이 독립적으로 모든 메시지를 수신 (pub/sub 모델)
-
-### 3. 크로스 서비스 타입 매핑
-- `spring.json.type.mapping`으로 Producer/Consumer 간 서로 다른 패키지의 클래스를 논리적 타입명으로 연결
-- 마이크로서비스 간 코드 공유 없이 이벤트 통신 가능
-
-### 4. Spring Cloud 서비스 디스커버리
-- 각 서비스가 Eureka에 자동 등록 (`@EnableDiscoveryClient`)
-- API Gateway가 `lb://service-name` 으로 로드밸런싱된 라우팅 수행
-
-### 5. 이벤트 기반 아키텍처 (EDA)
-- 서비스 간 직접 HTTP 호출 없이 Kafka를 통한 느슨한 결합
-- 비동기 처리로 각 서비스가 독립적으로 스케일링 가능
-- 주문 생성 → 결제 → 알림이 각각의 속도로 처리됨
+> 상세 학습은 [docs/](docs/README.md)의 11개 기술 문서를 참고.
