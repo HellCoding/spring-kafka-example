@@ -98,6 +98,25 @@ graph TB
 
 ---
 
+## 스크린샷
+
+### Swagger UI — API 문서 자동 생성
+> `http://localhost:8081/swagger-ui/index.html`
+
+![Swagger UI](docs/images/swagger-ui.png)
+
+### Eureka Dashboard — 서비스 등록 현황
+> `http://localhost:8761`
+
+![Eureka Dashboard](docs/images/eureka-dashboard.png)
+
+### Kafka UI — 토픽 및 메시지 모니터링
+> `http://localhost:9090`
+
+![Kafka UI](docs/images/kafka-ui.png)
+
+---
+
 ## 컨테이너 구성
 
 | 컨테이너 | 이미지 | 포트 | 역할 |
@@ -362,6 +381,7 @@ curl http://localhost:8080/api/orders
 
 | URL | 설명 |
 |-----|------|
+| http://localhost:8080/webjars/swagger-ui/index.html | Swagger UI (Gateway 통합) — 모든 서비스 API 테스트 |
 | http://localhost:8761 | Eureka 대시보드 — 등록된 서비스 인스턴스 확인 |
 | http://localhost:9090 | Kafka UI — 토픽, 메시지, 컨슈머 그룹 모니터링 |
 
