@@ -2,6 +2,8 @@
 
 > **"결제 서비스가 죽으면 주문도 못 받는다고?"** — 동기 호출의 한계를 느끼고, 비동기 이벤트 기반 아키텍처로 전환한 과정을 담은 프로젝트.
 
+[![CI](https://github.com/HellCoding/spring-kafka-example/actions/workflows/ci.yml/badge.svg)](https://github.com/HellCoding/spring-kafka-example/actions/workflows/ci.yml)
+
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.5-6DB33F?logo=springboot&logoColor=white)
 ![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2023.0.1-6DB33F?logo=spring&logoColor=white)
 ![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-3.7-231F20?logo=apachekafka&logoColor=white)
