@@ -1,0 +1,74 @@
+direction: right
+
+client: "Client" {
+  shape: person
+  style.fill: "#e94560"
+  style.font-color: "#ffffff"
+}
+
+gw: "API Gateway\n:8080" {
+  style.fill: "#6DB33F"
+  style.font-color: "#ffffff"
+}
+
+os: "Order Service\n:8081" {
+  style.fill: "#6DB33F"
+  style.font-color: "#ffffff"
+}
+
+ps: "Payment Service\n:8082" {
+  style.fill: "#6DB33F"
+  style.font-color: "#ffffff"
+}
+
+ns: "Notification Service\n:8083" {
+  style.fill: "#6DB33F"
+  style.font-color: "#ffffff"
+}
+
+kafka: "Apache Kafka\nKRaft :9092" {
+  shape: queue
+  style.fill: "#231F20"
+  style.font-color: "#ffffff"
+}
+
+service_discovery: "Service Discovery" {
+  style.fill: "#0f3460"
+  style.font-color: "#ffffff"
+
+  eu: "Eureka Server\n:8761" {style.fill: "#6DB33F"; style.font-color: "#ffffff"}
+}
+
+postgresql: "PostgreSQL :5432" {
+  style.fill: "#0f3460"
+  style.font-color: "#ffffff"
+
+  db1: "order_db" {shape: cylinder; style.fill: "#4169E1"; style.font-color: "#ffffff"}
+  db2: "payment_db" {shape: cylinder; style.fill: "#4169E1"; style.font-color: "#ffffff"}
+}
+
+kafka_ui: "Kafka UI\n:9090" {
+  style.fill: "#1a1a2e"
+  style.font-color: "#ffffff"
+}
+
+client -> gw: "HTTP" {style.stroke: "#53bf9d"}
+gw -> os: "라우팅" {style.stroke: "#53bf9d"}
+gw -> ps: "라우팅" {style.stroke: "#53bf9d"}
+
+os -> kafka: "OrderCreatedEvent" {style.stroke: "#e94560"}
+kafka -> ps: "OrderCreatedEvent" {style.stroke: "#e94560"}
+ps -> kafka: "PaymentEvent" {style.stroke: "#f0a500"}
+kafka -> os: "PaymentEvent" {style.stroke: "#f0a500"}
+kafka -> ns: "PaymentEvent" {style.stroke: "#f0a500"}
+ns -> kafka: "NotificationSentEvent" {style.stroke: "#bd93f9"}
+
+os -> postgresql.db1 {style.stroke: "#4169E1"}
+ps -> postgresql.db2 {style.stroke: "#4169E1"}
+
+os -> service_discovery.eu: "등록" {style.stroke: "#888888"; style.stroke-dash: 3}
+ps -> service_discovery.eu: "등록" {style.stroke: "#888888"; style.stroke-dash: 3}
+ns -> service_discovery.eu: "등록" {style.stroke: "#888888"; style.stroke-dash: 3}
+gw -> service_discovery.eu: "조회" {style.stroke: "#888888"; style.stroke-dash: 3}
+
+kafka_ui -> kafka: "모니터링" {style.stroke: "#888888"; style.stroke-dash: 3}

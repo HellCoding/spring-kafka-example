@@ -55,48 +55,7 @@ Payment Service가 죽어도?
 
 ## 아키텍처
 
-```mermaid
-graph TB
-    Client([Client]) -->|HTTP| GW[API Gateway<br/>:8080]
-
-    GW -->|라우팅| OS[Order Service<br/>:8081]
-    GW -->|라우팅| PS[Payment Service<br/>:8082]
-
-    OS -->|OrderCreatedEvent| K{{Apache Kafka<br/>KRaft :9092}}
-    K -->|OrderCreatedEvent| PS
-    PS -->|PaymentEvent| K
-    K -->|PaymentEvent| OS
-    K -->|PaymentEvent| NS[Notification Service<br/>:8083]
-    NS -->|NotificationSentEvent| K
-
-    OS --- DB1[(order_db)]
-    PS --- DB2[(payment_db)]
-
-    subgraph Service Discovery
-        EU[Eureka Server<br/>:8761]
-    end
-
-    OS -.->|등록| EU
-    PS -.->|등록| EU
-    NS -.->|등록| EU
-    GW -.->|조회| EU
-
-    KUI[Kafka UI<br/>:9090] -.->|모니터링| K
-
-    subgraph PostgreSQL :5432
-        DB1
-        DB2
-    end
-
-    style K fill:#231F20,color:#fff
-    style GW fill:#6DB33F,color:#fff
-    style OS fill:#6DB33F,color:#fff
-    style PS fill:#6DB33F,color:#fff
-    style NS fill:#6DB33F,color:#fff
-    style EU fill:#6DB33F,color:#fff
-    style DB1 fill:#4169E1,color:#fff
-    style DB2 fill:#4169E1,color:#fff
-```
+![Architecture](docs/images/architecture.png)
 
 ---
 
@@ -161,37 +120,7 @@ graph TB
 
 ### 이벤트 플로우 상세
 
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant OS as Order Service
-    participant K as Kafka
-    participant PS as Payment Service
-    participant NS as Notification Service
-
-    C->>OS: POST /api/orders
-    OS->>OS: DB 저장 (status=PENDING)
-    OS-->>C: 201 Created {status: PENDING}
-
-    OS->>K: OrderCreatedEvent<br/>[order-events]
-    K->>PS: OrderCreatedEvent
-
-    PS->>PS: 결제 시뮬레이션<br/>(70% 성공 / 30% 실패)
-    PS->>PS: DB 저장 (결제 결과)
-    PS->>K: PaymentEvent<br/>[payment-events]
-
-    par 동시 수신
-        K->>OS: PaymentEvent
-        OS->>OS: 주문 상태 업데이트<br/>SUCCESS→CONFIRMED<br/>FAILED→CANCELLED
-    and
-        K->>NS: PaymentEvent
-        NS->>NS: 알림 로그 출력
-        NS->>K: NotificationSentEvent<br/>[notification-events]
-    end
-
-    C->>OS: GET /api/orders/{id}
-    OS-->>C: {status: CONFIRMED}
-```
+![Event Flow](docs/images/event-flow.png)
 
 ### Consumer Group 설계
 

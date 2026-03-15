@@ -1,0 +1,30 @@
+direction: down
+
+title: "Kafka Event Flow (Sequence)" {
+  style.font-size: 24
+  style.font-color: "#ffffff"
+  style.fill: "#1a1a2e"
+  near: top-center
+}
+
+c: "Client" {shape: person; style.fill: "#e94560"; style.font-color: "#ffffff"}
+os: "Order Service" {style.fill: "#6DB33F"; style.font-color: "#ffffff"}
+kafka: "Kafka" {shape: queue; style.fill: "#231F20"; style.font-color: "#ffffff"}
+ps: "Payment Service" {style.fill: "#6DB33F"; style.font-color: "#ffffff"}
+ns: "Notification Service" {style.fill: "#6DB33F"; style.font-color: "#ffffff"}
+
+c -> os: "1. POST /api/orders" {style.stroke: "#53bf9d"}
+os -> os: "2. DB 저장\n(status=PENDING)" {style.stroke: "#888888"}
+os -> c: "3. 201 Created\n{status: PENDING}" {style.stroke: "#53bf9d"}
+
+os -> kafka: "4. OrderCreatedEvent\n[order-events]" {style.stroke: "#e94560"}
+kafka -> ps: "5. OrderCreatedEvent" {style.stroke: "#e94560"}
+
+ps -> ps: "6. 결제 시뮬레이션\n(70% 성공 / 30% 실패)" {style.stroke: "#888888"}
+ps -> kafka: "7. PaymentEvent\n[payment-events]" {style.stroke: "#f0a500"}
+
+kafka -> os: "8a. PaymentEvent\n주문 상태 업데이트" {style.stroke: "#f0a500"}
+kafka -> ns: "8b. PaymentEvent\n알림 로그 출력" {style.stroke: "#f0a500"}
+ns -> kafka: "9. NotificationSentEvent\n[notification-events]" {style.stroke: "#bd93f9"}
+
+c -> os: "10. GET /api/orders/{id}\n{status: CONFIRMED}" {style.stroke: "#53bf9d"}
